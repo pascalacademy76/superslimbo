@@ -7,7 +7,8 @@
 const http  = require('http');
 const https = require('https');
 
-const PORT = 3001;
+const PORT = Number(process.env.PORT) || 3001;
+const HOST = process.env.PORT ? '0.0.0.0' : '127.0.0.1';
 
 function normalizeProductCode(value) {
   if (value == null) return null;
@@ -293,7 +294,7 @@ const server = http.createServer(async (req, res) => {
   send(res, 404, { error: 'Onbekend pad' });
 });
 
-server.listen(PORT, '127.0.0.1', () => {
+server.listen(PORT, HOST, () => {
   console.log('');
   console.log('  ✅  Boodschappen proxy draait!');
   console.log(`  🌐  http://localhost:${PORT}`);
