@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Super Slimbo – slim boodschappen doen</title>
+  <meta name="description" content="Super Slimbo vergelijkt supermarktprijzen van Albert Heijn, Jumbo en Dirk. Vind snel de goedkoopste producten per stuk, per 100 g of per 100 ml.">
+  <meta name="robots" content="index, follow">
+  <meta name="author" content="Pascal ter Heege">
+  <link rel="canonical" href="https://superslimbo.nl/">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Super Slimbo">
+  <meta property="og:title" content="Super Slimbo – slim boodschappen doen">
+  <meta property="og:description" content="Vergelijk live prijzen van AH, Jumbo en Dirk en vind snel de goedkoopste keuze.">
+  <meta property="og:url" content="https://superslimbo.nl/">
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="Super Slimbo – slim boodschappen doen">
+  <meta name="twitter:description" content="Vergelijk live supermarktprijzen en bespaar op je boodschappen.">
+  <meta name="theme-color" content="#27AE60">
+  <meta name="superslimbo-api-base" content="">
+  <link rel="stylesheet" href="css/style.css">
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "name": "Super Slimbo",
+      "url": "https://superslimbo.nl/",
+      "inLanguage": "nl-NL"
+    }
+  </script>
+</head>
+<body>
+
+<div class="beta-banner" id="betaBanner">
+  <span>Beta-versie: Super Slimbo is in testfase. Resultaten kunnen nog afwijken.</span>
+  <button class="beta-banner-close" onclick="closeBetaBanner()" aria-label="Sluit melding">✕</button>
+</div>
+
+<!-- HEADER -->
+<header>
+  <div class="logo" onclick="goHome()" style="cursor:pointer">
+    <span class="logo-mark">S</span>
+    <span>Super Slimbo</span>
+  </div>
+  <nav>
+    <button class="tab-btn active" data-view="search" onclick="showView('search', this)">Zoeken</button>
+    <button class="tab-btn" data-view="list" onclick="showView('list', this)">
+      Lijst<span id="listBadge" class="badge" style="display:none"></span>
+    </button>
+  </nav>
+</header>
+
+<div class="container">
+
+  <!-- ===== SEARCH VIEW ===== -->
+  <div id="searchView" class="view active">
+
+    <div class="search-section">
+      <div class="search-wrap">
+        <input
+          type="text"
+          id="searchInput"
+          placeholder="Zoekwoord → vergrootglas → Y"
+          autocomplete="off"
+          onkeydown="if(event.key==='Enter') triggerSearch()"
+        >
+        <button class="search-btn" id="searchBtn" onclick="triggerSearch()">Vergelijk</button>
+      </div>
+      <div class="toggles-row">
+        <div id="storeToggles" class="store-toggles"></div>
+      </div>
+    </div>
+
+    <!-- HERO -->
+    <div class="hero" id="heroSection">
+      <div class="hero-text">
+        <h1>Bespaar op je boodschappen,<br>zonder meer moeite.</h1>
+        <p>Super Slimbo vergelijkt live de prijzen van Albert Heijn, Jumbo en Dirk — per product, per hoeveelheid. Zo zie je in één oogopslag waar je het voordeligst uit bent.</p>
+        <ul class="hero-benefits">
+          <li><span class="benefit-icon">⚡</span>Live prijzen, geen gedoe met folders</li>
+          <li><span class="benefit-icon">📦</span>Vergelijking per hoeveelheid (500 ml vs. 1 liter)</li>
+          <li><span class="benefit-icon">🏆</span>De goedkoopste optie direct gemarkeerd</li>
+          <li><span class="benefit-icon">🛒</span>Zet producten op je boodschappenlijst per winkel</li>
+        </ul>
+      </div>
+      <div class="hero-visual">
+        <div class="hero-stat"><span class="hero-stat-num">3</span><span class="hero-stat-label">supermarkten</span></div>
+        <div class="hero-stat"><span class="hero-stat-num">live</span><span class="hero-stat-label">prijzen</span></div>
+        <div class="hero-stat"><span class="hero-stat-num">gratis</span><span class="hero-stat-label">altijd</span></div>
+      </div>
+    </div>
+
+    <div id="searchResults"></div>
+
+    <!-- FAQ -->
+    <div class="faq" id="faqSection">
+      <h2 class="faq-title">Veelgestelde vragen</h2>
+
+      <details class="faq-item">
+        <summary>Hoe gebruik ik Super Slimbo?</summary>
+        <p>Zoek op een product, bijvoorbeeld "espresso". Zie je een merk of variant die je aanspreekt? Klik op het vergrootglas-icoon op de kaart om varianten te laden. Staan er meerdere verpakkingsgroottes of eenheden? Klik dan op het samenvoeg-icoon (Y-vorm) om alles op één kaart te zetten en te vergelijken per stuk, per 100 g of per 100 ml. Voeg daarna de beste keuze toe aan je lijst en bekijk direct je voordeel.</p>
+      </details>
+
+      <details class="faq-item">
+        <summary>Waarom krijg ik geen resultaten?</summary>
+        <p>Soms geeft een zoekterm geen resultaten als de supermarkten het product niet herkennen. Probeer een andere schrijfwijze of een kortere zoekterm — bijv. "melk" in plaats van "halfvolle melk 1 liter". Controleer ook of de juiste supermarkten aanstaan via het tabblad Supermarkten.</p>
+      </details>
+
+      <details class="faq-item">
+        <summary>Waarom ontbreekt een supermarkt in de resultaten?</summary>
+        <p>Elke supermarkt heeft een eigen zoekmachine. Soms geeft een winkel geen resultaten terug voor een specifiek zoekwoord — probeer een alternatieve schrijfwijze (bijv. "broccoliroosjes" in plaats van "broccoli roosjes").</p>
+      </details>
+
+      <details class="faq-item">
+        <summary>Waarom zie ik sommige producten niet?</summary>
+        <p>Super Slimbo toont vooral vergelijkbare groepen. Producten kunnen anders gegroepeerd worden per verpakking, eenheid of beschikbare productcode. Ook 1-winkelkaarten kunnen zichtbaar zijn, bijvoorbeeld als ze binnen dezelfde productfamilie vallen en via Y samengevoegd kunnen worden. Probeer eventueel een bredere of kortere zoekterm.</p>
+      </details>
+
+      <details class="faq-item">
+        <summary>Hoe werkt de prijs per kg berekening?</summary>
+        <p>Super Slimbo berekent automatisch vergelijkingseenheden op basis van naam en verpakking: per stuk, per 100 g of per 100 ml (en waar mogelijk ook per kg/liter). Zo kun je producten met verschillende verpakkingsgroottes eerlijk vergelijken.</p>
+      </details>
+
+      <details class="faq-item">
+        <summary>Wat gebeurt er als ik de lijst deel?</summary>
+        <p>De app deelt een leesbare tekstversie van je lijst — inclusief winkels, producten, prijzen en totaal. De ontvanger heeft de app niet nodig om de lijst te lezen. Op mobiel opent automatisch de deeloptie (WhatsApp, mail, etc.), op desktop wordt de tekst naar je klembord gekopieerd.</p>
+      </details>
+
+      <details class="faq-item">
+        <summary>Zijn de prijzen altijd actueel?</summary>
+        <p>Elke zoekopdracht haalt opnieuw prijsdata op via de gekoppelde supermarktbronnen. Daardoor zie je in de praktijk actuele prijzen van dat moment. Prijzen en acties kunnen natuurlijk wel tussentijds wijzigen bij de winkels zelf.</p>
+      </details>
+
+      <details class="faq-item">
+        <summary>Wat betekent "Voordeel" op mijn boodschappenlijst?</summary>
+        <p>Bij elk product op je lijst zie je je voordeel ten opzichte van een relevante referentieprijs: bijvoorbeeld een duurdere vergelijkingsvariant en/of de oorspronkelijke prijs bij aanbieding. Zo zie je direct wat je bespaart met je gekozen optie.</p>
+      </details>
+
+      <details class="faq-item">
+        <summary>Waarom heb ik Super Slimbo gebouwd?</summary>
+        <p>Ik heb Super Slimbo gebouwd vanuit mijn werk als rekendocent. Het project laat zien wat er mogelijk is als je AI en webontwikkeling combineert: data ophalen, slim vergelijken en inzichten visueel maken. Tegelijk wil ik mensen helpen om sneller de goedkoopste producten te vinden en bewuster boodschappen te doen.</p>
+      </details>
+    </div>
+  </div>
+
+  <!-- ===== LIST VIEW ===== -->
+  <div id="listView" class="view">
+    <div id="listContent"></div>
+  </div>
+
+
+</div>
+
+<footer class="site-footer">
+  <p>© 2026 Pascal ter Heege · Website in beta · Vragen/feedback: <a href="mailto:info@pascalterheege.nl">info@pascalterheege.nl</a></p>
+</footer>
+
+<!-- TOAST -->
+<div id="toast"></div>
+
+<!-- IMAGE ZOOM -->
+<div id="imageZoom" class="image-zoom" onclick="closeImageZoom(event)">
+  <img id="imageZoomImg" alt="Product afbeelding vergroot">
+</div>
+
+<script src="js/app.js"></script>
+</body>
+</html>
