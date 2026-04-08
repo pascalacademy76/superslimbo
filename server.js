@@ -87,7 +87,7 @@ function httpsPost(host, path, headers, body) {
 // ── CORS headers ────────────────────────────────────────────────────────────
 const CORS = {
   'Access-Control-Allow-Origin':  '*',
-  'Access-Control-Allow-Methods': 'GET, OPTIONS',
+  'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
   'Access-Control-Allow-Headers': '*',
   'Content-Type':                 'application/json; charset=utf-8',
 };
@@ -95,6 +95,73 @@ const CORS = {
 function send(res, status, data) {
   res.writeHead(status, CORS);
   res.end(typeof data === 'string' ? data : JSON.stringify(data));
+}
+
+function hasQtyHint(text) {
+  const t = String(text || '');
+  return /\b\d+\s*(stuks?|cups?|capsules?|pods?|pads?|tabletten?|tabs?)\b/i.test(t)
+    || /\b\d+\s*[x×]\s*\d+\b/i.test(t);
+}
+
+function hasPackHint(text) {
+  const t = String(text || '');
+  return /\b\d+\s*[- ]?pack\b/i.test(t)
+    || /\bpack\b/i.test(t)
+    || /\b\d+\s*[x×]\s*\d+\b/i.test(t);
+}
+
+function logSearchSummary(store, query, products) {
+  const list = Array.isArray(products) ? products : [];
+  const total = list.length;
+  const withUnit = list.filter(p => String(p.unit || '').trim().length > 0).length;
+  const withPricePerUnit = list.filter(p => String(p.pricePerUnit || '').trim().length > 0).length;
+  const withQtyInName = list.filter(p => hasQtyHint(p.name)).length;
+  const withQtyInUnit = list.filter(p => hasQtyHint(p.unit)).length;
+  const withPackInName = list.filter(p => hasPackHint(p.name)).length;
+  const withPackInUnit = list.filter(p => hasPackHint(p.unit)).length;
+
+  console.log(
+    `[SEARCH][${store}] q="${query}" total=${total} unit=${withUnit}/${total} ppu=${withPricePerUnit}/${total} ` +
+    `qty(name)=${withQtyInName}/${total} qty(unit)=${withQtyInUnit}/${total} ` +
+    `pack(name)=${withPackInName}/${total} pack(unit)=${withPackInUnit}/${total}`
+  );
+}
+
+function readJsonBody(req) {
+  return new Promise((resolve, reject) => {
+    let raw = '';
+    req.on('data', chunk => { raw += chunk; });
+    req.on('end', () => {
+      if (!raw.trim()) return resolve({});
+      try {
+        resolve(JSON.parse(raw));
+      } catch (e) {
+        reject(new Error('Invalid JSON body'));
+      }
+    });
+    req.on('error', reject);
+  });
+}
+
+async function handleDebugMeta(req, res) {
+  try {
+    const body = await readJsonBody(req);
+    const safe = {
+      event: body.event ?? null,
+      ts: body.ts ?? null,
+      source: body.source ?? null,
+      currentQuery: body.currentQuery ?? null,
+      storeId: body.storeId ?? null,
+      productId: body.productId ?? null,
+      imageUrl: body.imageUrl ?? null,
+      product: body.product ?? null,
+    };
+    console.log(`[ZOOM] ${JSON.stringify(safe)}`);
+    send(res, 200, { ok: true });
+  } catch (e) {
+    console.error('[ZOOM]', e.message);
+    send(res, 400, { error: e.message });
+  }
 }
 
 // ── Route handlers ──────────────────────────────────────────────────────────
@@ -110,6 +177,16 @@ async function handleAH(query, res) {
       'X-Application':   'AHWEBSHOP',
     });
     if (result.status !== 200) throw new Error(`AH API ${result.status}: ${result.body.slice(0,200)}`);
+    try {
+      const parsed = JSON.parse(result.body);
+      const items = parsed?.products ?? [];
+      const summaryProducts = items.map(p => ({
+        name: p.title ?? '',
+        unit: p.salesUnitSize ?? p.unitSize ?? '',
+        pricePerUnit: p.unitPriceDescription ?? '',
+      }));
+      logSearchSummary('AH', query, summaryProducts);
+    } catch (_) {}
     send(res, 200, result.body);
   } catch (e) {
     console.error('[AH]', e.message);
@@ -209,6 +286,7 @@ async function handleJumbo(query, res) {
       }
     }
 
+    logSearchSummary('Jumbo', query, products);
     send(res, 200, { products });
   } catch (e) {
     console.error('[Jumbo]', e.message);
@@ -266,6 +344,7 @@ async function fetchDirkProducts(query) {
 async function handleDirk(query, res) {
   try {
     const products = await fetchDirkProducts(query);
+    logSearchSummary('Dirk', query, products);
     send(res, 200, { products });
   } catch (e) {
     console.error('[Dirk]', e.message);
@@ -282,13 +361,16 @@ const server = http.createServer(async (req, res) => {
   const pathname = parsed.pathname;
   const q        = (parsed.searchParams.get('q') || '').trim();
 
-  if (!q && pathname !== '/ping') return send(res, 400, { error: 'Geen zoekterm opgegeven (parameter: q)' });
+  if (!q && pathname !== '/ping' && pathname !== '/debug/meta') {
+    return send(res, 400, { error: 'Geen zoekterm opgegeven (parameter: q)' });
+  }
 
   if (pathname === '/api/ah')    return handleAH(q, res);
   // Voor Jumbo: spaties toevoegen tussen aaneen geschreven woorden helpt de zoekfunctie
   // bijv. "broccoliroosjes" → "broccoli roosjes" via spatie voor bekende scheidingen
   if (pathname === '/api/jumbo') return handleJumbo(q, res);
   if (pathname === '/api/dirk')  return handleDirk(q, res);  // compound splitting zit in handleDirk zelf
+  if (pathname === '/debug/meta' && req.method === 'POST') return handleDebugMeta(req, res);
   if (pathname === '/ping')      return send(res, 200, { ok: true, ts: Date.now() });
 
   send(res, 404, { error: 'Onbekend pad' });
